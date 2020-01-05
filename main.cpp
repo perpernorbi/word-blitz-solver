@@ -40,6 +40,8 @@ public:
 std::pair<icu::UnicodeString, std::vector<bool>>
 GetCharsAndStars(std::string input) {
   icu::UnicodeString utf(icu::UnicodeString::fromUTF8(input));
+  icu::UnicodeString uppercase(
+      icu::UnicodeString::fromUTF8("AÁBCDEFGHIÍJKLMNOÓÖŐPQRSTUÚÜŰVXYZ"));
   icu::UnicodeString chars;
   std::vector<bool> stars(utf.length(), false);
   int i = 0;
@@ -47,9 +49,13 @@ GetCharsAndStars(std::string input) {
     if (utf[j] == '.')
       stars[i] = true;
     else {
+      if (uppercase.indexOf(utf[j]) > -1)
+        stars[i] = true;
+
       chars += utf[j];
       ++i;
     }
+  chars.toLower();
   return std::make_pair(chars, stars);
 }
 
@@ -116,7 +122,8 @@ int main(int argc, char *argv[]) {
     state.push_back(new_state);
     if (new_state.word == *new_state.w_begin) {
       if (already_found.find(new_state.word) == already_found.cend()) {
-        const auto starred = IsStarred(already_visited, stars);
+        const auto starred =
+            IsStarred(already_visited, stars) && new_state.word.length() > 2;
         already_found.insert(
             {new_state.word, starred ? Printed::yes : Printed::no});
         if (starred)
